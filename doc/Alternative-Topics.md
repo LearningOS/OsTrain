@@ -1,3 +1,7 @@
+# 2020年秋季学期操作系统专题训练课的备选实验题目
+
+当有同学选择某个题目后，老师和助教会进一步完善题目描述有参考文献。
+
 ### 已有参考
 
 软件所：[https://github.com/rcore-os/rCore/wiki/OSPP-2020](https://github.com/rcore-os/rCore/wiki/OSPP-2020)
