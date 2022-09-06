@@ -1,0 +1,38 @@
+pde_t *pdep = NULL;
+    uintptr_t pde = PDX(la);
+    pdep = &pgdir[pde];
+    // 非present也就是不存在这样的page（缺页），需要分配页
+    if (!(*pdep & PTE_P)) {
+        struct Page *p;
+        // 如果不需要分配或者分配的页为NULL
+        if (!create || (p = alloc_page()) == NULL) {
+            return NULL;
+        }
+        set_page_ref(p, 1);
+        // page table的索引值（PTE)
+        uintptr_t pti = page2pa(p);
+
+        // KADDR: takes a physical address and returns the corresponding kernel virtual address.
+        memset(KADDR(pti), 0, sizeof(struct Page));
+
+        // 相当于把物理地址给了pdep
+        // pdep: page directory entry point
+        *pdep = pti | PTE_P | PTE_W | PTE_U;
+    }
+
+    // 先找到pde address
+    // address in page table or page directory entry
+    // 0xFFF = 111111111111
+    // ~0xFFF = 1111111111 1111111111 000000000000
+    // #define PTE_ADDR(pte)   ((uintptr_t)(pte) & ~0xFFF)
+    // #define PDE_ADDR(pde)   PTE_ADDR(pde)
+    uintptr_t pa = PDE_ADDR(*pdep);
+    // 再转换为虚拟地址（线性地址）
+    // KADDR = pa >> 12 + 0xC0000000
+    // 0xC0000000 = 11000000 00000000 00000000 00000000
+    pte_t *pde_kva = KADDR(pa);
+    
+    // 需要映射的线性地址
+    // 中间10位(PTE)
+    uintptr_t need_to_map_ptx = PTX(la);
+    return &pde_kva[need_to_map_ptx];
